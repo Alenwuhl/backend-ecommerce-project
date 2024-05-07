@@ -1,43 +1,96 @@
-# User Role Upgrade Functionality
+# Proyecto Backend de Ecommerce con Node.js
 
-## Overview
-Este proyecto implementa la funcionalidad del backend para demostrar la actualización del rol de un usuario en un sistema, requiriendo la subida de documentos específicos antes de permitir la actualización. Se utiliza para propósitos de demostración para ilustrar cómo se pueden manejar las operaciones de carga y validación de archivos en el backend.
+## Descripción
 
-## Pre-requisitos
-Para utilizar esta funcionalidad, debes tener [Postman](https://www.postman.com/downloads/) instalado para hacer las solicitudes a la API.
+Este es un proyecto de backend en Node.js que proporciona todas las funcionalidades necesarias para un ecommerce, excepto la parte de pago. Para interactuar con las rutas puedes usar Postman. Tambien te dejo aqui el link a mi repositorio de un frontend basico que usa algunas de las rutas mas importantes de este backend: https://github.com/Alenwuhl/Basic-frontend-ecommerce.git
 
-## Autenticación de Usuario
-Para realizar operaciones que requieren autenticación, sigue estos pasos:
-- Haz login utilizando la ruta `POST` a **localhost:5000/api/users/login** con las siguientes credenciales en el `body` de la solicitud en formato `raw` y `JSON`:
+En caso de que no desees abrir y descargar el frontend, te dejo aqui un breve video de youtube mostrando mi frontend: https://youtu.be/8S7xaPgIndk
 
-     ```json
-     {
-       "Email": "user@example.com",
-       "Password": "User123"
-     }
+El proyecto utiliza MongoDB y se puede configurar para trabajar tanto con un enfoque de factory como con el modelo de repository.
 
-## Subida de documentos
-Para subir los documentos requeridos:
+## Uso
 
-Realiza una solicitud POST a **localhost:5000/api/users/65f99ec85c1d5807f09a6af2/documents**
-En Postman, selecciona body y luego elige form-data.
-Debes incluir tres archivos con las siguientes keys y tipos de archivo:
+Para comenzar a usar la aplicación, es necesario registrarse e iniciar sesión, como se detalla a continuación. El diseño de la aplicación se enfoca en la facilidad de uso, proporcionando una experiencia segura y personalizada para cada usuario.
+En caso de registrarte a traves del frontend, te registrarás con rol "user". En caso de hacerlo desde postman podras incluir un "role" ya sea "user", "admin" o "premium". Estas ultimas tienen autorizaciones que el usuario normal no tiene.
 
-- Key 1: Este campo es para la 'Identificación' y debe ser un archivo .pdf, .jpeg o .png.
-- Key 2: Este campo es para el 'Comprobante de domicilio' y debe ser un archivo .pdf, .jpeg o .png.
-- Key 3: Este campo es para el 'Comprobante de estado de cuenta' y debe ser un archivo .pdf, .jpeg o .png.
-  
-Asegúrate de adjuntar los archivos correspondientes para cada key.
+Es importante destacar en este punto que todas las rutas e postman pueden ser probadas a traves del localhost o de https://finished-backend-project.onrender.com ya que el backend tiene el deploy correspondiente.
 
-## Actualización del Rol de Usuario
-Para cambiar el rol del usuario a "premium":
+## Registro e Inicio de Sesión
 
-Realiza una solicitud POST a **localhost:5000/api/users/premium/65f99ec85c1d5807f09a6af2** con el siguiente body en formato raw y JSON:
+Para el registro e inicio en la aplicación, sigue estos pasos:
 
-     
-     {
-       "newRole": "premium"
-     }
+1. Ve al endpoint **`/api/users/register`** usando una herramienta como Postman.
+2. Envía tu información personal en el cuerpo de la solicitud, incluyendo `first_name`, `last_name`, `email`, `age` y `password`.
+3. Para registrarte con permisos de administrador, asegúrate de incluir el rol de **`admin`** en tus datos de registro. Del mismo modo, puedes registrarte como usuario **`premium`** especificando el rol de **`premium`**.
 
-## Notas adicionales
-Todos los archivos subidos deben cumplir con los tipos de archivo permitidos y corresponder a los documentos requeridos para una transición exitosa a un rol premium.
+Después de registrarte, inicia sesión de la siguiente manera:
+
+1. Dirígete al endpoint **`/api/users/login`**.
+2. Ingresa tu `email` registrado y `password`.
+3. Si el inicio de sesión es exitoso, tu sesión permanecerá activa por un tiempo limitado, durante el cual podrás acceder a todas las funcionalidades de la aplicación.
+
+## Rutas de Usuarios (`/api/users`)
+
+- **GET `/`** - Recupera todos los usuarios.
+- **GET `/current`** - Devuelve un DTO con los datos relevantes del usuario activo.
+- **POST `/process-to-reset-password`** - Inicia el proceso (vía correo electrónico) para restablecer la contraseña si es necesario.
+- **POST `/resetPassword/:token`** - Cambia la contraseña después de haber iniciado el proceso con la ruta anterior. El token tiene una validez de una hora.
+- **POST `/register`** - Registra a un nuevo usuario.
+- **POST `/login`** - Inicia sesión de un usuario.
+- **POST `/premium/:uid`** - Permite a un usuario o usuario premium cambiar su rol a premium o viceversa pasando el ID del usuario en los parámetros y el nuevo rol en el cuerpo de la solicitud. Debes agregar los documentos requeridos.
+- **DELETE `/deleteInactiveUsers`** - Permite borrar los suarios sin actividad en los ultimos 48 horas.
+- **DELETE `/user/:uid`** - Permite borrar un usuario por su id.
+
+
+## Rutas de Productos y Carritos
+
+### `/api/carts`:
+
+- **POST `/:cid/purchase`** - Finaliza la compra en un carrito específico.
+- **GET `/`** - Recupera los carritos.
+- **GET `/:cid`** - Recupera un carrito específico.
+- **POST `/`**, `authorization (["user", "premium"])` - Añade productos al carrito. Para usuarios premium, esto es válido siempre que no sean los propietarios del producto.
+- **POST `/cart/:cartId/product`** - Añade un producto a un carrito existente.
+- **DELETE `/cart/:cartId/product/:productId`** - Elimina un producto del carrito.
+- **DELETE `/cart/:cartId`** - Elimina un carrito.
+
+### `/api/products`:
+
+- **GET `/`** - Obtiene todos los productos.
+- **GET `/:pID`** - Obtiene un producto específico por ID.
+- **POST `/`**, `authorization (['admin', 'premium'])` - Crea un nuevo producto.
+- **PUT `/:pid`**, `authorization('admin')` - Permite al administrador actualizar un producto.
+- **DELETE `/:pid`**, `authorization (['admin', 'premium'])` - Permite al administrador y al usuario premium eliminar un producto. Un usuario con rol premium solo puede eliminar productos de los que sea propietario.
+
+## Despliegue
+
+Por ahora, este proyecto puede ser desplegado en servidores locales. o puedes probar las funcionalidades basicas a traves del link de desplieqgue en la descripcion.
+
+## Construido con
+
+- **Node.js** - Entorno de ejecución para JavaScript.
+- **Express** - Framework para aplicaciones web.
+- **MongoDB** - Sistema de bases de datos.
+
+## Autores
+
+- **Alen Wuhl**
+
+## Nota
+
+Puedes probar funcionalidades específicas para usuarios con ciertos roles, como `user`, `premium` o `admin`, iniciando sesión con las siguientes credenciales:
+
+### Funcionalidades para usuario básico:
+
+- **Email**: `"user@example.com"`
+- **Password**: `"User123"`
+
+### Funcionalidades para usuario premium:
+
+- **Email**: `"premium@example.com"`
+- **Password**: `"premium123"`
+
+### Funcionalidades para administrador:
+
+- **Email**: `"admin@example.com"`
+- **Password**: `"Admin123"`
