@@ -1,0 +1,157 @@
+servers:
+  - url: http://localhost:3000/api
+paths:
+  /api/products:
+    get:
+      summary: Obtiene todos los productos disponibles o un número limitado de ellos.
+      tags:
+        - Products
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+          description: Limita el número de productos a devolver. Es opcional.
+      responses:
+        200:
+          description: Lista de productos, puede ser limitada por el parámetro 'limit'.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        500:
+          description: Error interno del servidor.
+    post:
+      summary: Crea un nuevo producto.
+      tags:
+        - Products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        200:
+          description: Producto creado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        400:
+          description: Faltan propiedades obligatorias en la solicitud.
+        500:
+          description: Error interno del servidor.
+      security:
+        - sessionAuth: ['admin', 'premium']
+  /api/products/{pid}:
+    get:
+      summary: Obtiene un producto específico por su ID.
+      tags:
+        - Products
+      parameters:
+        - in: path
+          name: pid
+          required: true
+          schema:
+            type: string
+          description: ID del producto a obtener.
+      responses:
+        200:
+          description: Detalle del producto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        404:
+          description: Producto no encontrado.
+        500:
+          description: Error interno del servidor.
+    put:
+      summary: Actualiza un producto existente por su ID.
+      tags:
+        - Products
+      parameters:
+        - in: path
+          name: pid
+          required: true
+          schema:
+            type: string
+          description: ID del producto a actualizar.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        200:
+          description: Producto actualizado exitosamente.
+        404:
+          description: Producto no encontrado.
+        500:
+          description: Error interno del servidor.
+      security:
+        - sessionAuth: ['admin']
+    delete:
+      summary: Elimina un producto por su ID.
+      tags:
+        - Products
+      parameters:
+        - in: path
+          name: pid
+          required: true
+          schema:
+            type: string
+          description: ID del producto a eliminar.
+      responses:
+        200:
+          description: Producto eliminado exitosamente.
+        403:
+          description: No autorizado para eliminar el producto.
+        404:
+          description: Producto no encontrado.
+        500:
+          description: Error interno del servidor.
+      security:
+        - sessionAuth: ['admin', 'premium']
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Nombre del producto.
+          required: true
+        description:
+          type: string
+          description: Descripcion del producto.
+          required: true
+        code:
+          type: string
+          description: Codigo unico del producto.
+          required: true
+        price:
+          type: number
+          description: Precio del producto.
+          required: true
+        stock:
+          type: number
+          description: Stock del producto.
+          required: true
+        owner:
+          type: string
+          description: Quien agrega ese producto.
+          default: "admin"
+        thumbnail:
+          description: Imagen del producto.
+          type: string
+  securitySchemes:
+    sessionAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
